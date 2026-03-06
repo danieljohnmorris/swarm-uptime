@@ -79,7 +79,7 @@ function formatTime(ts: string) {
                   {check.responseTime != null ? `${check.responseTime}ms` : '-'}
                 </span>
                 <span style="color: #9ca3af; margin-left: auto; white-space: nowrap;">
-                  {formatTime(check.timestamp || check.createdAt)}
+                  {formatTime(check.checkedAt || check.timestamp || check.createdAt)}
                 </span>
               </div>
             ))}
