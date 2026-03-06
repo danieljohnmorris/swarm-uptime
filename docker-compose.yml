@@ -7,13 +7,13 @@ services:
       dockerfile: docker/Dockerfile.api
     environment:
       DATABASE_URL: postgres://swarm:swarm@postgres:5432/swarm_uptime
-      VALKEY_HOST: valkey
-      VALKEY_PORT: "6379"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
     ports:
       - "3001:3001"
     depends_on:
       - postgres
-      - valkey
+      - redis
     deploy:
       replicas: 2
       restart_policy:
@@ -25,11 +25,11 @@ services:
       dockerfile: docker/Dockerfile.worker
     environment:
       DATABASE_URL: postgres://swarm:swarm@postgres:5432/swarm_uptime
-      VALKEY_HOST: valkey
-      VALKEY_PORT: "6379"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
     depends_on:
       - postgres
-      - valkey
+      - redis
     deploy:
       replicas: 2
       restart_policy:
@@ -63,10 +63,10 @@ services:
         constraints:
           - node.role == manager
 
-  valkey:
-    image: valkey/valkey:8-alpine
+  redis:
+    image: redis:8-alpine
     volumes:
-      - valkeydata:/data
+      - redisdata:/data
     deploy:
       placement:
         constraints:
@@ -74,4 +74,4 @@ services:
 
 volumes:
   pgdata:
-  valkeydata:
+  redisdata:

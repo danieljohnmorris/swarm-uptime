@@ -26,11 +26,11 @@ services:
     image: ${REGISTRY}/swarm-uptime-api:latest
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      VALKEY_HOST: valkey
-      VALKEY_PORT: "6379"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
     depends_on:
       - postgres
-      - valkey
+      - redis
     deploy:
       replicas: 2
       labels:
@@ -46,11 +46,11 @@ services:
     image: ${REGISTRY}/swarm-uptime-worker:latest
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      VALKEY_HOST: valkey
-      VALKEY_PORT: "6379"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
     depends_on:
       - postgres
-      - valkey
+      - redis
     deploy:
       replicas: 2
       restart_policy:
@@ -86,10 +86,10 @@ services:
         constraints:
           - node.role == manager
 
-  valkey:
-    image: valkey/valkey:8-alpine
+  redis:
+    image: redis:8-alpine
     volumes:
-      - valkeydata:/data
+      - redisdata:/data
     deploy:
       placement:
         constraints:
@@ -97,5 +97,5 @@ services:
 
 volumes:
   pgdata:
-  valkeydata:
+  redisdata:
   letsencrypt:

@@ -9,16 +9,16 @@ This is a reference project for deploying a full stack on a VPS with Dokploy Swa
 - **API** - Hono on Node
 - **Worker** - BullMQ processing check jobs
 - **Web** - Astro SSR status page
-- **Queue** - Valkey (Redis fork, BSD licensed)
+- **Queue** - Redis
 - **Database** - Postgres
 - **Proxy** - Traefik (SSL, routing, load balancing)
 
 ## Local dev
 
-Start Postgres and Valkey:
+Start Postgres and Redis:
 
 ```bash
-docker compose up postgres valkey -d
+docker compose up postgres redis -d
 ```
 
 Copy the env file:

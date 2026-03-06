@@ -3,8 +3,9 @@ import { db } from "./db/index.js";
 import { checks, monitors } from "./db/schema.js";
 import { eq } from "drizzle-orm";
 
-const VALKEY_HOST = process.env.VALKEY_HOST || "localhost";
-const VALKEY_PORT = parseInt(process.env.VALKEY_PORT || "6379", 10);
+const REDIS_HOST = process.env.REDIS_HOST || "localhost";
+const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 const FETCH_TIMEOUT_MS = 10_000;
 
 interface CheckJob {
@@ -65,14 +66,15 @@ async function processCheck(job: Job<CheckJob>) {
 
 const worker = new Worker<CheckJob>("checks", processCheck, {
   connection: {
-    host: VALKEY_HOST,
-    port: VALKEY_PORT,
+    host: REDIS_HOST,
+    port: REDIS_PORT,
+    password: REDIS_PASSWORD,
   },
 });
 
 worker.on("ready", () => {
   console.log(
-    `Worker connected to Valkey at ${VALKEY_HOST}:${VALKEY_PORT}, listening on queue "checks"`
+    `Worker connected to Redis at ${REDIS_HOST}:${REDIS_PORT}, listening on queue "checks"`
   );
 });
 
