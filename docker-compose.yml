@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    environment:
+      DATABASE_URL: postgres://swarm:swarm@postgres:5432/swarm_uptime
+      VALKEY_HOST: valkey
+      VALKEY_PORT: "6379"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - valkey
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    environment:
+      DATABASE_URL: postgres://swarm:swarm@postgres:5432/swarm_uptime
+      VALKEY_HOST: valkey
+      VALKEY_PORT: "6379"
+    depends_on:
+      - postgres
+      - valkey
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    environment:
+      API_URL: http://api:3001
+    ports:
+      - "4321:4321"
+    depends_on:
+      - api
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: swarm
+      POSTGRES_PASSWORD: swarm
+      POSTGRES_DB: swarm_uptime
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    volumes:
+      - valkeydata:/data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+volumes:
+  pgdata:
+  valkeydata:

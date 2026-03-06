@@ -1,0 +1,91 @@
+---
+const API_URL = import.meta.env.API_URL || process.env.API_URL || 'http://localhost:3001';
+const { id } = Astro.params;
+
+let monitor: any = null;
+let checks: any[] = [];
+let error = '';
+
+try {
+  const monitorRes = await fetch(`${API_URL}/monitors/${id}`);
+  if (!monitorRes.ok) throw new Error(`API returned ${monitorRes.status}`);
+  monitor = await monitorRes.json();
+
+  const checksRes = await fetch(`${API_URL}/monitors/${id}/checks`);
+  if (checksRes.ok) {
+    checks = await checksRes.json();
+  }
+} catch (e: any) {
+  error = e.message || 'Failed to fetch monitor';
+}
+
+function statusColor(status: string) {
+  if (status === 'up') return '#22c55e';
+  if (status === 'down') return '#ef4444';
+  return '#9ca3af';
+}
+
+function formatTime(ts: string) {
+  return new Date(ts).toLocaleString();
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{monitor ? monitor.name : 'Monitor'} - Status Page</title>
+  </head>
+  <body style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; color: #111827;">
+    <div style="max-width: 640px; margin: 0 auto; padding: 48px 16px;">
+      <a href="/" style="font-size: 13px; color: #6b7280; text-decoration: none; display: inline-block; margin-bottom: 24px;">
+        &larr; Back to all monitors
+      </a>
+
+      {error && (
+        <div style="padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; color: #991b1b; margin-bottom: 24px;">
+          {error}
+        </div>
+      )}
+
+      {monitor && (
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <span
+              style={`width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; background: ${statusColor(monitor.status)};`}
+            />
+            <h1 style="font-size: 24px; font-weight: 600; margin: 0;">{monitor.name}</h1>
+          </div>
+          <p style="font-size: 14px; color: #6b7280; margin: 0 0 32px 26px;">
+            {monitor.url}
+          </p>
+
+          <h2 style="font-size: 16px; font-weight: 600; margin: 0 0 16px 0;">Recent Checks</h2>
+
+          {checks.length === 0 && (
+            <p style="color: #6b7280; font-size: 14px;">No checks recorded yet.</p>
+          )}
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            {checks.map((check) => (
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px;">
+                <span
+                  style={`width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: ${check.statusCode && check.statusCode >= 200 && check.statusCode < 400 ? '#22c55e' : '#ef4444'};`}
+                />
+                <span style="font-weight: 500; width: 48px;">
+                  {check.statusCode || '---'}
+                </span>
+                <span style="color: #6b7280; width: 80px;">
+                  {check.responseTime != null ? `${check.responseTime}ms` : '-'}
+                </span>
+                <span style="color: #9ca3af; margin-left: auto; white-space: nowrap;">
+                  {formatTime(check.timestamp || check.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </body>
+</html>
