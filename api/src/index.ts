@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
-import { db } from "./db/index.js";
+import { db, runMigrations } from "./db/index.js";
 import { monitors, checks } from "./db/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { checksQueue } from "./queue.js";
@@ -71,8 +71,14 @@ app.get("/monitors/:id/checks", async (c) => {
   return c.json(result);
 });
 
-serve({ fetch: app.fetch, port: 3001 }, (info) => {
-  console.log(`API running on http://localhost:${info.port}`);
-});
+async function start() {
+  await runMigrations();
 
-startScheduler();
+  serve({ fetch: app.fetch, port: 3001 }, (info) => {
+    console.log(`API running on http://localhost:${info.port}`);
+  });
+
+  startScheduler();
+}
+
+start();
